@@ -1,0 +1,28 @@
+# IntelliJ IDEA / IDE metadata
+.idea/
+**/.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# Maven / Java build output
+**/target/
+*.class
+*.hprof
+
+# Runtime logs
+**/logs/
+*.log
+
+# Local environment and credentials
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+settings.xml
+
+# OS files
+.DS_Store
+Thumbs.db
