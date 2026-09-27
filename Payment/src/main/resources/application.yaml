@@ -1,0 +1,28 @@
+server:
+  port: ${PAYMENT_PORT}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [ "prometheus" ]
+
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    queues:
+      node_payment_request-create-payment-link-queue: ${QUEUE_NODE_PAYMENT_REQUEST_CREATE_PAYMENT_LINK}
+
+      payment_node_payment-feedback-queue: ${QUEUE_PAYMENT_NODE_PAYMENT_FEEDBACK}
+      payment_task_payment-status-queue: ${QUEUE_PAYMENT_TASK_PAYMENT_STATUS}
+      payment_operator_hot-exception-queue: ${QUEUE_PAYMENT_OPERATOR_HOT_EXCEPTION}
+stripe:
+  api-key: ${STRIPE_API_KEY}
+  webhook:
+    secret: ${STRIPE_WEBHOOK_SECRET}
+  url:
+    success: ${DISPATCHER_URI}/success.html
+    cancel: ${DISPATCHER_URI}/cancel.html

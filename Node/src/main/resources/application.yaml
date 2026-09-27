@@ -1,0 +1,52 @@
+server:
+  port: ${NODE_PORT}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [ "prometheus" ]
+  metrics:
+    enable:
+      all: true
+
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    queues:
+      dispatcher_node_user-update-queue: ${QUEUE_DISPATCHER_NODE_USER_UPDATE}
+      payment_node_payment-feedback-queue: ${QUEUE_PAYMENT_NODE_PAYMENT_FEEDBACK}
+      task_node_task-error-event-queue: ${QUEUE_TASK_NODE_TASK_ERROR_EVENT}
+      task_node_response-send-message-queue: ${QUEUE_TASK_NODE_RESPONSE_SEND_MESSAGE}
+
+      node_dispatcher_response-send-message-queue: ${QUEUE_NODE_DISPATCHER_RESPONSE_SEND_MESSAGE}
+      node_dispatcher_response-edit-message-text-queue: ${QUEUE_NODE_DISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT}
+      node_payment_request-create-payment-link-queue: ${QUEUE_NODE_PAYMENT_REQUEST_CREATE_PAYMENT_LINK}
+      node_task_request-process-task-queue: ${QUEUE_NODE_TASK_REQUEST_PROCESS_TASK}
+      node_task_request-cancel-task-queue: ${QUEUE_NODE_TASK_REQUEST_CANCEL_TASK}
+      node_task_payment-status-queue: ${QUEUE_NODE_TASK_PAYMENT_STATUS}
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+  cache:
+    type: redis
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    timeout: ${REDIS_TIMEOUT}
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
+  normal-file-size: ${NORMAL_FILE_SIZE}
+  text:
+    user_agreement_url: ${DISPATCHER_URI}/user_agreement.html

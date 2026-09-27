@@ -1,0 +1,369 @@
+version: '3.9.5'
+
+volumes:
+  operator-bot-db-volume:
+  operator-bot-rabbitmq-volume:
+  monitoring_grafana-volume:
+  grafana-volume:
+  task-info-data:
+  shared-volume:
+
+services:
+  dispatcher:
+    container_name: dispatcher
+    ports:
+      - ${DISPATCHER_PORT_MAPPING}
+    restart: on-failure
+    build:
+      context: ./
+      dockerfile: ./Dispatcher/Dockerfile
+    volumes:
+      - shared-volume:/env
+    environment:
+      - DISPATCHER_PORT=${DISPATCHER_PORT}
+
+      - BOT_OPERATOR_NAME=${BOT_OPERATOR_NAME}
+      - BOT_OPERATOR_TOKEN=${BOT_OPERATOR_TOKEN}
+      - DISPATCHER_NGROK_TOKEN=${DISPATCHER_NGROK_TOKEN}
+
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+
+      - QUEUE_NODE_DISPATCHER_RESPONSE_SEND_MESSAGE=${QUEUE_NODE_DISPATCHER_RESPONSE_SEND_MESSAGE}
+      - QUEUE_NODE_DISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT=${QUEUE_NODE_DISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT}
+      - QUEUE_OPERATOR_DISPATCHER_TERMIN_INFORMATION=${QUEUE_OPERATOR_DISPATCHER_TERMIN_INFORMATION}
+
+      - QUEUE_DISPATCHER_NODE_USER_UPDATE=${QUEUE_DISPATCHER_NODE_USER_UPDATE}
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8084/actuator/health" ]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '3'
+    depends_on:
+      operator-bot-rabbitmq:
+        condition: service_healthy
+
+  node:
+    container_name: node
+    ports:
+      - ${NODE_PORT_MAPPING}
+    restart: on-failure
+    build:
+      context: ./
+      dockerfile: ./Node/Dockerfile
+    volumes:
+      - shared-volume:/env
+    environment:
+      - NODE_PORT=${NODE_PORT}
+      - DISPATCHER_PORT=${DISPATCHER_PORT}
+
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_TIMEOUT=${REDIS_TIMEOUT}
+
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+
+      - QUEUE_DISPATCHER_NODE_USER_UPDATE=${QUEUE_DISPATCHER_NODE_USER_UPDATE}
+      - QUEUE_TASK_NODE_TASK_ERROR_EVENT=${QUEUE_TASK_NODE_TASK_ERROR_EVENT}
+      - QUEUE_TASK_NODE_RESPONSE_SEND_MESSAGE=${QUEUE_TASK_NODE_RESPONSE_SEND_MESSAGE}
+      - QUEUE_PAYMENT_NODE_PAYMENT_FEEDBACK=${QUEUE_PAYMENT_NODE_PAYMENT_FEEDBACK}
+
+      - QUEUE_NODE_DISPATCHER_RESPONSE_SEND_MESSAGE=${QUEUE_NODE_DISPATCHER_RESPONSE_SEND_MESSAGE}
+      - QUEUE_NODE_DISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT=${QUEUE_NODE_DISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT}
+      - QUEUE_NODE_TASK_PAYMENT_STATUS=${QUEUE_NODE_TASK_PAYMENT_STATUS}
+      - QUEUE_NODE_TASK_REQUEST_PROCESS_TASK=${QUEUE_NODE_TASK_REQUEST_PROCESS_TASK}
+      - QUEUE_NODE_TASK_REQUEST_CANCEL_TASK=${QUEUE_NODE_TASK_REQUEST_CANCEL_TASK}
+      - QUEUE_NODE_PAYMENT_REQUEST_CREATE_PAYMENT_LINK=${QUEUE_NODE_PAYMENT_REQUEST_CREATE_PAYMENT_LINK}
+
+      - NORMAL_FILE_SIZE=${NORMAL_FILE_SIZE}
+      - TEXT_ALLOWED_PATTERN=${TEXT_ALLOWED_PATTERN}
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '3'
+    depends_on:
+      operator-bot-rabbitmq:
+        condition: service_healthy
+      operator-bot-db:
+        condition: service_healthy
+      operator-bot-redis:
+        condition: service_healthy
+      dispatcher:
+        condition: service_healthy
+  
+  operator:
+    container_name: operator
+    ports:
+      - ${OPERATOR_PORT_MAPPING}
+    restart: on-failure
+    build:
+      context: ./
+      dockerfile: ./Operator/Dockerfile
+    environment:
+      - OPERATOR_PORT=${OPERATOR_PORT}
+
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_TIMEOUT=${REDIS_TIMEOUT}
+
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+
+      - QUEUE_TASK_OPERATOR_NEW_TASK_EVENT=${QUEUE_TASK_OPERATOR_NEW_TASK_EVENT}
+      - QUEUE_PAYMENT_OPERATOR_HOT_EXCEPTION=${QUEUE_PAYMENT_OPERATOR_HOT_EXCEPTION}
+      - QUEUE_OPERATORDISPATCHER_OPERATOR_OPERATOR_UPDATE=${QUEUE_OPERATORDISPATCHER_OPERATOR_OPERATOR_UPDATE}
+
+      - QUEUE_OPERATOR_TASK_RESPONSE_ANSWER_TASK_ANSWER_MESSAGE=${QUEUE_OPERATOR_TASK_RESPONSE_ANSWER_TASK_ANSWER_MESSAGE}
+      - QUEUE_OPERATOR_OPERATORDISPATCHER_DELETE_MESSAGE=${QUEUE_OPERATOR_OPERATORDISPATCHER_DELETE_MESSAGE}
+      - QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_SEND_MESSAGE=${QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_SEND_MESSAGE}
+      - QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT=${QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT}
+      - QUEUE_OPERATOR_OPERATORDISPATCHER_BOT_RESPONSE=${QUEUE_OPERATOR_OPERATORDISPATCHER_BOT_RESPONSE}
+
+      - OPERATOR_GROUP_CHAT_ID=${OPERATOR_GROUP_CHAT_ID}
+      - OPERATOR_REGISTRATION_CODE=${OPERATOR_REGISTRATION_CODE}
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '3'
+    depends_on:
+      operator-bot-rabbitmq:
+        condition: service_healthy
+      operator-bot-db:
+        condition: service_healthy
+      operator-bot-redis:
+        condition: service_healthy
+
+  task:
+    container_name: task
+    ports:
+      - ${TASK_PORT_MAPPING}
+    restart: on-failure
+    build:
+      context: ./
+      dockerfile: ./Task/Dockerfile
+    volumes:
+      - task-info-data:/app/files
+    environment:
+      - TASK_PORT=${TASK_PORT}
+
+      - BOT_OPERATOR_NAME=${BOT_OPERATOR_NAME}
+      - BOT_OPERATOR_TOKEN=${BOT_OPERATOR_TOKEN}
+      - BOT_OPERATOR_URI=${BOT_OPERATOR_URI}
+
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_TIMEOUT=${REDIS_TIMEOUT}
+
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+
+      - QUEUE_PAYMENT_TASK_PAYMENT_STATUS=${QUEUE_PAYMENT_TASK_PAYMENT_STATUS}
+      - QUEUE_NODE_TASK_PAYMENT_STATUS=${QUEUE_NODE_TASK_PAYMENT_STATUS}
+      - QUEUE_NODE_TASK_REQUEST_PROCESS_TASK=${QUEUE_NODE_TASK_REQUEST_PROCESS_TASK}
+      - QUEUE_NODE_TASK_REQUEST_CANCEL_TASK=${QUEUE_NODE_TASK_REQUEST_CANCEL_TASK}
+      - QUEUE_OPERATOR_TASK_RESPONSE_ANSWER_TASK_ANSWER_MESSAGE=${QUEUE_OPERATOR_TASK_RESPONSE_ANSWER_TASK_ANSWER_MESSAGE}
+
+      - QUEUE_TASK_OPERATOR_NEW_TASK_EVENT=${QUEUE_TASK_OPERATOR_NEW_TASK_EVENT}
+      - QUEUE_TASK_NODE_TASK_ERROR_EVENT=${QUEUE_TASK_NODE_TASK_ERROR_EVENT}
+      - QUEUE_TASK_NODE_RESPONSE_SEND_MESSAGE=${QUEUE_TASK_NODE_RESPONSE_SEND_MESSAGE}
+
+      - CONSTANT_LIMIT_TASK_INFOS=${CONSTANT_LIMIT_TASK_INFOS}
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '3'
+    depends_on:
+      operator-bot-rabbitmq:
+        condition: service_healthy
+      operator-bot-db:
+        condition: service_healthy
+      operator-bot-redis:
+        condition: service_healthy
+
+  payment:
+    container_name: payment
+    ports:
+      - ${PAYMENT_PORT_MAPPING}
+    restart: on-failure
+    build:
+      context: ./
+      dockerfile: ./Payment/Dockerfile
+    volumes:
+      - shared-volume:/env
+    environment:
+      - PAYMENT_PORT=${PAYMENT_PORT}
+      - DISPATCHER_PORT=${DISPATCHER_PORT}
+
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+
+      - QUEUE_NODE_PAYMENT_REQUEST_CREATE_PAYMENT_LINK=${QUEUE_NODE_PAYMENT_REQUEST_CREATE_PAYMENT_LINK}
+
+      - QUEUE_PAYMENT_TASK_PAYMENT_STATUS=${QUEUE_PAYMENT_TASK_PAYMENT_STATUS}
+      - QUEUE_PAYMENT_OPERATOR_HOT_EXCEPTION=${QUEUE_PAYMENT_OPERATOR_HOT_EXCEPTION}
+      - QUEUE_PAYMENT_NODE_PAYMENT_FEEDBACK=${QUEUE_PAYMENT_NODE_PAYMENT_FEEDBACK}
+
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '3'
+    depends_on:
+      operator-bot-rabbitmq:
+        condition: service_healthy
+      dispatcher:
+        condition: service_healthy
+
+  operator-dispatcher:
+    container_name: operator-dispatcher
+    ports:
+      - ${OPERATORDISPATCHER_PORT_MAPPING}
+    restart: on-failure
+    build:
+      context: ./
+      dockerfile: ./Operator-Dispatcher/Dockerfile
+    volumes:
+      - task-info-data:/app/files
+    environment:
+      - OPERATORDISPATCHER_PORT=${OPERATORDISPATCHER_PORT}
+
+      - BOT_OPERATORS_NAME=${BOT_OPERATORS_NAME}
+      - BOT_OPERATORS_TOKEN=${BOT_OPERATORS_TOKEN}
+      - OPERATOR_DISPATCHER_NGROK_TOKEN=${OPERATOR_DISPATCHER_NGROK_TOKEN}
+
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+
+      - QUEUE_OPERATOR_OPERATORDISPATCHER_DELETE_MESSAGE=${QUEUE_OPERATOR_OPERATORDISPATCHER_DELETE_MESSAGE}
+      - QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_SEND_MESSAGE=${QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_SEND_MESSAGE}
+      - QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT=${QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT}
+      - QUEUE_OPERATOR_OPERATORDISPATCHER_BOT_RESPONSE=${QUEUE_OPERATOR_OPERATORDISPATCHER_BOT_RESPONSE}
+
+      - QUEUE_OPERATORDISPATCHER_OPERATOR_OPERATOR_UPDATE=${QUEUE_OPERATORDISPATCHER_OPERATOR_OPERATOR_UPDATE}
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '3'
+    depends_on:
+      operator-bot-rabbitmq:
+        condition: service_healthy
+
+  operator-bot-rabbitmq:
+    container_name: operator-bot-rabbitmq
+    hostname: operator-bot-rabbitmq
+    image: rabbitmq:3.12.12-management-alpine
+    ports:
+      - ${RABBITMQ_AMQP_PORT_MAPPING}
+      - ${RABBITMQ_GUI_PORT_MAPPING}
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - operator-bot-rabbitmq-volume:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "--silent", "--quiet", "ping" ]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 30s
+    restart: unless-stopped
+
+  operator-bot-db:
+    container_name: operator-bot-db
+    hostname: operator-bot-db
+    image: postgres:14.5
+    volumes:
+      - operator-bot-db-volume:/var/lib/postgresql/data
+      - ./init-scripts/:/docker-entrypoint-initdb.d/
+    ports:
+      - ${POSTGRES_PORT_MAPPING}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME} -d ${POSTGRES_DB} -h 127.0.0.1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  operator-bot-redis:
+    container_name: operator-bot-redis
+    hostname: operator-bot-redis
+    image: redis:latest
+    ports:
+      - ${REDIS_PORT_MAPPING}
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  prometheus:
+    container_name: prometheus
+    hostname: prometheus
+    image: prom/prometheus:v2.44.0
+    ports:
+      - ${PROMETHEUS_PORT_MAPPING}
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    container_name: grafana
+    hostname: grafana
+    image: grafana/grafana:9.5.2
+    ports:
+      - ${GRAFANA_PORT_MAPPING}
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - grafana-volume:/var/lib/grafana

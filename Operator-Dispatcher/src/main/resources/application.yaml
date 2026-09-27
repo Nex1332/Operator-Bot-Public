@@ -1,0 +1,27 @@
+server:
+  port: ${OPERATORDISPATCHER_PORT}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [ "prometheus" ]
+
+bot:
+  name: ${BOT_OPERATORS_NAME}
+  token: ${BOT_OPERATORS_TOKEN}
+  uri: ${BOT_OPERATORS_URI}
+
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    queues:
+      operator_operatordispatcher_delete-message-queue: ${QUEUE_OPERATOR_OPERATORDISPATCHER_DELETE_MESSAGE}
+      operator_operatordispatcher_response-send-message-queue: ${QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_SEND_MESSAGE}
+      operator_operatordispatcher_response-edit-message-text-queue: ${QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT}
+      operator_operatordispatcher_bot-response-queue: ${QUEUE_OPERATOR_OPERATORDISPATCHER_BOT_RESPONSE}
+
+      operatordispatcher_operator_operator-update-queue: ${QUEUE_OPERATORDISPATCHER_OPERATOR_OPERATOR_UPDATE}

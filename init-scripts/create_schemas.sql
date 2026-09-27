@@ -1,0 +1,2 @@
+CREATE SCHEMA IF NOT EXISTS operator_schema;
+CREATE SCHEMA IF NOT EXISTS user_schema;

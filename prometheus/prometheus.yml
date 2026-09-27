@@ -1,0 +1,45 @@
+global:
+  scrape_interval: 3s
+
+scrape_configs:
+  - job_name: 'Dispatcher-Microservice'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['192.168.178.49:8084']
+        labels:
+          application: 'Dispatcher-Microservice'
+
+  - job_name: 'Node-Microservice'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['192.168.178.49:8087']
+        labels:
+          application: 'Node-Microservice'
+
+  - job_name: 'Operator-Microservice'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8088']
+        labels:
+          application: 'Operator-Microservice'
+
+  - job_name: 'Task-Microservice'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['192.168.178.49:8089']
+        labels:
+          application: 'Task-Microservice'
+
+  - job_name: 'Payment-Microservice'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['192.168.178.49:8090']
+        labels:
+          application: 'Payment-Microservice'
+
+  - job_name: 'Operator-Dispatcher-Microservice'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8091']
+        labels:
+          application: 'Operator-Dispatcher-Microservice'

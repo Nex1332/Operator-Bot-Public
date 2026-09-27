@@ -1,0 +1,50 @@
+server:
+  port: ${OPERATOR_PORT}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [ "prometheus" ]
+
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    queues:
+      task_operator_new-task-event-queue: ${QUEUE_TASK_OPERATOR_NEW_TASK_EVENT}
+      payment_operator_hot-exception-queue: ${QUEUE_PAYMENT_OPERATOR_HOT_EXCEPTION}
+      operatordispatcher_operator_operator-update-queue: ${QUEUE_OPERATORDISPATCHER_OPERATOR_OPERATOR_UPDATE}
+
+      operator_operatordispatcher_delete-message-queue: ${QUEUE_OPERATOR_OPERATORDISPATCHER_DELETE_MESSAGE}
+      operator_operatordispatcher_response-send-message-queue: ${QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_SEND_MESSAGE}
+      operator_operatordispatcher_response-edit-message-text-queue: ${QUEUE_OPERATOR_OPERATORDISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT}
+      operator_operatordispatcher_bot-response-queue: ${QUEUE_OPERATOR_OPERATORDISPATCHER_BOT_RESPONSE}
+      operator_task_response-answer-task-answer-message-queue: ${QUEUE_OPERATOR_TASK_RESPONSE_ANSWER_TASK_ANSWER_MESSAGE}
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+  cache:
+    type: redis
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    timeout: ${REDIS_TIMEOUT}
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
+operator:
+  group:
+    chat:
+      id: ${OPERATOR_GROUP_CHAT_ID}
+  registration:
+    code: ${OPERATOR_REGISTRATION_CODE}

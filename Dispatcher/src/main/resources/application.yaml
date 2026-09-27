@@ -1,0 +1,29 @@
+server:
+  port: ${DISPATCHER_PORT}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [ "prometheus", "health" ]
+  metrics:
+    enable:
+      all: true
+
+bot:
+  name: ${BOT_OPERATOR_NAME}
+  token: ${BOT_OPERATOR_TOKEN}
+  uri: ${BOT_OPERATOR_URI}
+
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    queues:
+      operator_dispatcher_termin-information-queue: ${QUEUE_OPERATOR_DISPATCHER_TERMIN_INFORMATION}
+      node_dispatcher_response-send-message-queue: ${QUEUE_NODE_DISPATCHER_RESPONSE_SEND_MESSAGE}
+      node_dispatcher_response-edit-message-text-queue: ${QUEUE_NODE_DISPATCHER_RESPONSE_EDIT_MESSAGE_TEXT}
+
+      dispatcher_node_user-update-queue: ${QUEUE_DISPATCHER_NODE_USER_UPDATE}
